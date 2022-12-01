@@ -1,42 +1,58 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
+import React, { useContext } from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { createDrawerNavigator } from '@react-navigation/drawer';
+import { createDrawerNavigator, DrawerContentScrollView, DrawerItemList, DrawerItem } from '@react-navigation/drawer';
+import AuthContext from '../contexts/auth';
+
 import ProductsScreen from '../pages/Products';
 import AddProductScreen from '../pages/AddProduct';
-import { getAuthenticationState } from '../services/authentication';
+import OrdersScreen from '../pages/ManageOrders';
+import AddOrderScreen from '../pages/AddOrder';
+import Login from '../pages/Login';
 
 const Drawer = createDrawerNavigator();
 const Products = createNativeStackNavigator();
-
+const Orders = createNativeStackNavigator();
 
 export default function Routes() {
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const { signed, signOut } = useContext(AuthContext);
 
-    useEffect(() => {
-        // const token = localStorage.getItem('token');
-        const authState = getAuthenticationState();
 
-        if (authState) {
-            setIsAuthenticated(true);
-        }
-    }, []);
+    function LogoutDrawerContent(props) {
+        return (
+            <DrawerContentScrollView {...props}>
+                <DrawerItemList {...props} />
+                {signed && (
+                    <DrawerItem label="Logout" onPress={() => signOut()} />
+                )}
+            </DrawerContentScrollView>
+        );
+    }
 
     function ProductsStackScreen() {
         return (
             <Products.Navigator screenOptions={{ headerShown: false }} initialRouteName="ProductsStack">
                 <Products.Screen name="ProductsStack" component={ProductsScreen} />
-                {isAuthenticated &&
+                {signed &&
                     <Products.Screen name="AddProductsStack" component={AddProductScreen} />
                 }
             </Products.Navigator>
         );
     }
 
+    function OrdersStackScreen() {
+        return (
+            <Orders.Navigator screenOptions={{ headerShown: false }} initialRouteName="OrdersStack">
+                <Orders.Screen name="OrdersStack" component={OrdersScreen} />
+                <Orders.Screen name="AddOrdersStack" component={AddOrderScreen} />
+            </Orders.Navigator>
+        );
+    }
+
     return (
-        <Drawer.Navigator>
-            <Drawer.Screen name="Products" component={ProductsStackScreen} />
+        <Drawer.Navigator drawerContent={props => <LogoutDrawerContent {...props} />}>
+            <Drawer.Screen name="Produtos" component={ProductsStackScreen} />
+            <Drawer.Screen name="Pedidos" component={OrdersStackScreen} />
+            <Drawer.Screen name="Login" component={Login} />
         </Drawer.Navigator>
     );
 }
