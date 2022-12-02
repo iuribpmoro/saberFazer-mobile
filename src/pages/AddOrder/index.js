@@ -7,6 +7,7 @@ export default function AddOrder() {
   const [nomePessoa, setNomePessoa] = useState('');
   const [cpfPessoa, setCpfPessoa] = useState('');
   const [formaPag, setFormaPag] = useState('');
+  const [cep, setCep] = useState('');
   const [endereco, setEndereco] = useState('');
   const [valor, setValor] = useState('');
   const [quantidade, setQuantidade] = useState(1);
@@ -35,6 +36,17 @@ export default function AddOrder() {
 
     console.log(newOrder);
   };
+
+  const handleCEP = async () => {
+    // Fetch the full address from the CEP API
+    const response = await fetch(`https://cep.awesomeapi.com.br/json/${cep}`);
+
+    // Parse the JSON response
+    const { address, city, state, district } = await response.json();
+
+    // Update the address state with the fetched address
+    setEndereco(`${address}, ${district}, ${city} - ${state}`);
+  }
 
   useEffect(() => {
 
@@ -83,6 +95,14 @@ export default function AddOrder() {
         label="CPF do Cliente"
         value={cpfPessoa}
         onChangeText={setCpfPessoa}
+        style={{ width: "100%", marginTop: 16 }}
+      />
+
+      <Input
+        label="CEP"
+        value={cep}
+        onChangeText={setCep}
+        onEndEditing={handleCEP}
         style={{ width: "100%", marginTop: 16 }}
       />
 
