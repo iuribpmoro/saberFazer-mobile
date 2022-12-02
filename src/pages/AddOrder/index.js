@@ -9,6 +9,7 @@ export default function AddOrder() {
   const [formaPag, setFormaPag] = useState('');
   const [endereco, setEndereco] = useState('');
   const [valor, setValor] = useState('');
+  const [quantidade, setQuantidade] = useState(1);
 
   const [products, setProducts] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(0);
@@ -28,6 +29,8 @@ export default function AddOrder() {
       confirmado: false,
       status: 'pendente',
       valor,
+      produto: selectedProduct,
+      quantidade: 1
     };
 
     console.log(newOrder);
@@ -55,6 +58,16 @@ export default function AddOrder() {
     ]);
   }, []);
 
+  const handleChangeProduct = (id) => {
+    setSelectedProduct(id);
+    setValor(products.find((product) => product.id_produto === id).valor);
+  };
+
+  const handleChangeQuantity = (quantity) => {
+    setQuantidade(quantity);
+    setValor(products.find((product) => product.id_produto === selectedProduct).valor * quantity);
+  };
+
 
   return (
     <ScrollView contentContainerStyle={{ alignItems: 'center', paddingTop: 16, flexGrow: 1, paddingBottom: 32 }}>
@@ -80,22 +93,15 @@ export default function AddOrder() {
         style={{ width: "100%", marginTop: 16 }}
       />
 
-      <Input
-        label="Valor"
-        value={valor}
-        onChangeText={setValor}
-        style={{ width: "100%", marginTop: 16 }}
-      />
-
       <Text
-        style={{ marginTop: 16, alignSelf: "flex-start", marginLeft: 8, fontSize: 16, fontWeight: 'bold', marginBottom: 16, color: "grey" }}>
+        style={{ marginTop: 16, alignSelf: "flex-start", marginLeft: 8, fontSize: 16, fontWeight: 'bold', marginBottom: 8, color: "grey" }}>
         Produto
       </Text>
 
       <Picker
         selectedValue={selectedProduct}
-        style={{ width: "100%" }}
-        onValueChange={(itemValue, itemIndex) => setSelectedProduct(itemValue)}
+        style={{ width: "100%", marginBottom: 16 }}
+        onValueChange={(itemValue, itemIndex) => handleChangeProduct(itemValue)}
         placeholder="Selecione um produto"
       >
         {products.map((product) => (
@@ -108,9 +114,15 @@ export default function AddOrder() {
         ))}
       </Picker>
 
+      <Input
+        label="Quantidade"
+        value={quantidade}
+        onChangeText={() => handleChangeQuantity(quantidade)}
+        style={{ width: "100%", marginTop: 16 }}
+      />
 
       <Text
-        style={{ marginTop: 16, alignSelf: "flex-start", marginLeft: 8, fontSize: 16, fontWeight: 'bold', marginBottom: 16, color: "grey" }}>
+        style={{ marginTop: 16, alignSelf: "flex-start", marginLeft: 8, fontSize: 16, fontWeight: 'bold', marginBottom: 8, color: "grey" }}>
         Forma de Pagamento
       </Text>
       <Picker
@@ -128,6 +140,15 @@ export default function AddOrder() {
           />
         ))}
       </Picker>
+
+      <Text
+        style={{ marginTop: 16, alignSelf: "flex-start", marginLeft: 8, fontSize: 16, fontWeight: 'bold', marginBottom: 8, color: "grey" }}>
+        Valor Total:
+      </Text>
+      <Text
+        style={{ marginTop: 16, alignSelf: "flex-start", marginLeft: 8, fontSize: 16, marginBottom: 8, color: "grey" }}>
+        R$ {Number(valor).toFixed(2)}
+      </Text>
 
       <Button
         title="Adicionar Pedido"
