@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import api from './api';
 
 const getAuthenticationState = async () => {
     try {
@@ -32,17 +33,17 @@ const signOut = async () => {
     }
 }
 
-function signIn() {
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            resolve({
-                token: 'jk12h3j21h3jk212h3jk12h3jkh12j3kh12k123hh21g3f12f3',
-                user: {
-                    name: 'Thiago',
-                    email: 'thiagomarinho@rockeseat.com.br',
-                }
-            });
-        }, 2000);
+function signIn(email, password) {
+    // return api post to auth, but resolved
+    return new Promise((resolve, reject) => {
+        api.post('/auth', {
+            email,
+            password
+        }).then((response) => {
+            resolve(response)
+        }).catch((error) => {
+            resolve(error.response.data)
+        });
     });
 }
 

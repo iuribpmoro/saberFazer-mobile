@@ -4,20 +4,25 @@ import * as auth from "../services/authentication";
 const AuthContext = createContext({});
 
 export const AuthProvider = ({ children }) => {
-    const [user, setUser] = useState(null);
+    const [token, setToken] = useState(null);
 
-    async function signIn() {
-        const response = await auth.signIn();
-        setUser(response.user);
+    async function signIn(email, password) {
+        const response = await auth.signIn(email, password);
+
+        if (!response.message) {
+            setToken(response.data);
+        } else {
+            return response;
+        }
+
     }
 
     async function signOut() {
-        // await auth.signOut();
-        setUser(null);
+        setToken(null);
     }
 
     return (
-        <AuthContext.Provider value={{ signed: !!user, user, signIn, signOut }}>
+        <AuthContext.Provider value={{ signed: !!token, token, signIn, signOut }}>
             {children}
         </AuthContext.Provider>
 

@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-    baseURL: "",
+    baseURL: "https://saberfazer-backend-production.up.railway.app",
     timeout: 5000
 })
 

@@ -13,9 +13,13 @@ export default function Login() {
   const navigation = useNavigation();
 
   const handleSignIn = async () => {
-    await signIn();
+    const response = await signIn(email, password);
 
-    navigation.navigate("Pedidos");
+    if (response) {
+      alert(response.message);
+    } else {
+      navigation.navigate("Pedidos");
+    }
   }
 
   useEffect(() => {
@@ -25,13 +29,12 @@ export default function Login() {
   }, [signed]);
 
   return (
-    <View style={{ alignItems: 'center', paddingTop: 16 }}>
+    <View style={{ alignItems: 'center', paddingTop: 32 }}>
 
       {signed ? (
         <Text>Logado</Text>
       ) : (
         <>
-          <Text h4 style={{ marginBottom: 16 }}>Login</Text>
 
           <Input
             label="Email"
@@ -47,6 +50,7 @@ export default function Login() {
             autoCapitalize="none"
             autoCorrect={false}
             value={password}
+            textContentType="password"
             onChangeText={(value) => setPassword(value)}
           />
           <Button
