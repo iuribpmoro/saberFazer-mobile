@@ -1,26 +1,68 @@
 import { useNavigation } from '@react-navigation/native';
-import { ListItem } from '@rneui/base';
+import { Dialog, ListItem } from '@rneui/base';
 import { StatusBar } from 'expo-status-bar';
 import { useContext, useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { FlatList } from 'react-native-gesture-handler';
-import { Icon, Button } from '@rneui/themed';
+import { Icon, Button, Input } from '@rneui/themed';
 import AuthContext from '../../contexts/auth';
-import { getOrders } from '../../hooks/order-hooks';
+import { getOrders, updateOrder } from '../../hooks/order-hooks';
 
 export default function ManageOrders() {
   const [orders, setOrders] = useState([])
   const navigation = useNavigation();
   const { signed, user } = useContext(AuthContext);
   const [refreshing, setRefreshing] = useState(false);
+  const [isCancelOrderDialogOpen, setIsCancelOrderDialogOpen] = useState(null);
+  const [cancelOrderObservation, setCancelOrderObservation] = useState('');
 
-  const changeOrderStatus = (id, status) => {
+  const handleCancelOrder = async () => {
+    const newOrders = orders.map((order) => {
+      if (order.id_pedido === isCancelOrderDialogOpen) {
+        return {
+          ...order,
+          confirmado: 3,
+          obs: cancelOrderObservation || '',
+          data_hora: order.data_hora.slice(0, 19).replace('T', ' ')
+        };
+      }
+
+      return order;
+    });
+
+    setOrders(newOrders);
+    console.log(newOrders);
+
+    const order = orders.find((order) => order.id_pedido === isCancelOrderDialogOpen);
+    const changedOrder = {
+      ...order,
+      confirmado: 3,
+      obs: cancelOrderObservation || '',
+      data_hora: order.data_hora.slice(0, 19).replace('T', ' ')
+    };
+
+    console.log(changedOrder);
+
+    await updateOrder(changedOrder);
+
+    setIsCancelOrderDialogOpen(null);
+    setCancelOrderObservation('');
+  }
+
+  const changeOrderStatus = async (id, status) => {
+    if (status === 3) {
+      setIsCancelOrderDialogOpen(id);
+
+      return;
+    }
+
     const newOrders = orders.map((order) => {
       if (order.id_pedido === id) {
         return {
           ...order,
-          confirmado: true,
-          status,
+          confirmado: status,
+          obs: order.obs || '',
+          data_hora: order.data_hora.slice(0, 19).replace('T', ' ')
         };
       }
 
@@ -29,7 +71,14 @@ export default function ManageOrders() {
 
     setOrders(newOrders);
 
-    console.log(newOrders);
+    const order = orders.find((order) => order.id_pedido === id);
+    const changedOrder = {
+      ...order,
+      confirmado: status,
+      data_hora: order.data_hora.slice(0, 19).replace('T', ' ')
+    };
+
+    await updateOrder(changedOrder);
   };
 
   const getStatus = (status) => {
@@ -50,7 +99,6 @@ export default function ManageOrders() {
   useEffect(() => {
     const fetchOrders = async () => {
       const response = await getOrders();
-      console.log(response);
 
       setOrders(response);
     }
@@ -62,12 +110,33 @@ export default function ManageOrders() {
   return (
     <View style={{ alignItems: 'center', paddingTop: 16 }}>
 
+      <Dialog
+        isVisible={isCancelOrderDialogOpen !== null}
+        onBackdropPress={() => setIsCancelOrderDialogOpen(null)}
+        overlayStyle={{ backgroundColor: '#fff', padding: 16 }}
+      >
+        <Dialog.Title title="Cancelar pedido" titleStyle={{ textAlign: 'center', paddingBottom: 32 }} />
+        <Input
+          label="Observação"
+          value={cancelOrderObservation}
+          onChangeText={setCancelOrderObservation}
+          style={{ width: "100%", marginTop: 16 }}
+        />
+        <Dialog.Actions>
+          <Dialog.Button
+            title="Salvar"
+            onPress={async () => await handleCancelOrder()}
+          />
+        </Dialog.Actions>
+      </Dialog>
+      <Dialog.Actions visible={isCancelOrderDialogOpen} />
+
       <FlatList
-        key={item => item.id_pedido}
+        key={orders.id_pedido}
         data={orders}
         style={{ width: '100%' }}
-        refreshing={refreshing}
         onRefresh={() => setRefreshing(true)}
+        refreshing={refreshing}
         ListEmptyComponent={() => (
           <View style={{ alignItems: 'center', paddingTop: 16, paddingBottom: 16 }}>
             <Text style={{ fontSize: 16, color: '#999' }}>Nenhum pedido encontrado</Text>
@@ -89,21 +158,21 @@ export default function ManageOrders() {
             {signed && !item.confirmado &&
               <>
                 <Button
-                  onPress={() => changeOrderStatus(item.id_pedido, 'confirmado')}
+                  onPress={() => changeOrderStatus(item.id_pedido, 1)}
                 >
                   <Icon name="check" color={"white"} />
                 </Button>
                 <Button
-                  onPress={() => changeOrderStatus(item.id_pedido, 'cancelado')}
+                  onPress={() => changeOrderStatus(item.id_pedido, 3)}
                   buttonStyle={{ marginLeft: 8 }}
                 >
                   <Icon name="close" color={"white"} />
                 </Button></>
             }
 
-            {signed && item.status === 'confirmado' &&
+            {signed && getStatus(item.confirmado) === 'Confirmado' &&
               <Button
-                onPress={() => changeOrderStatus(item.id_pedido, 'finalizado')}
+                onPress={() => changeOrderStatus(item.id_pedido, 2)}
                 buttonStyle={{ marginRight: 8 }}
               >
                 <Icon name="check" color={"white"} />

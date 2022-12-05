@@ -17,7 +17,7 @@ const createOrderProducts = async (orderProducts) => {
 
 
 const updateOrder = async (order) => {
-    const response = await api.put(`/pedido/${order.id_produto}`, order);
+    const response = await api.put(`/pedido/${order.id_pedido}`, order);
     return response.data;
 }
 
