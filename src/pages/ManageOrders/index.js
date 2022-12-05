@@ -7,6 +7,8 @@ import { FlatList } from 'react-native-gesture-handler';
 import { Icon, Button, Input } from '@rneui/themed';
 import AuthContext from '../../contexts/auth';
 import { getOrders, updateOrder } from '../../hooks/order-hooks';
+import { SearchBar } from '@rneui/themed';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function ManageOrders() {
   const [orders, setOrders] = useState([])
@@ -15,6 +17,7 @@ export default function ManageOrders() {
   const [refreshing, setRefreshing] = useState(false);
   const [isCancelOrderDialogOpen, setIsCancelOrderDialogOpen] = useState(null);
   const [cancelOrderObservation, setCancelOrderObservation] = useState('');
+  const [search, setSearch] = useState('');
 
   const handleCancelOrder = async () => {
     const newOrders = orders.map((order) => {
@@ -96,19 +99,30 @@ export default function ManageOrders() {
     }
   };
 
-  useEffect(() => {
-    const fetchOrders = async () => {
-      const response = await getOrders();
+  const getMyOrders = async () => {
+    const response = await getOrders();
 
-      setOrders(response);
+    const myOrders = response.filter((order) => order.cpf_pessoa === search);
+
+    setOrders(myOrders);
+  };
+
+  useEffect(() => {
+    if (signed) {
+      const fetchOrders = async () => {
+        const response = await getOrders();
+
+        setOrders(response);
+      }
+
+      fetchOrders();
     }
 
-    fetchOrders();
     setRefreshing(false);
   }, [refreshing]);
 
   return (
-    <View style={{ alignItems: 'center', paddingTop: 16 }}>
+    <View style={{ alignItems: 'center', width: '100%' }}>
 
       <Dialog
         isVisible={isCancelOrderDialogOpen !== null}
@@ -130,6 +144,17 @@ export default function ManageOrders() {
         </Dialog.Actions>
       </Dialog>
       <Dialog.Actions visible={isCancelOrderDialogOpen} />
+
+      {!signed && (
+        <SearchBar
+          placeholder="Insira seu CPF..."
+          onChangeText={(text) => setSearch(text)}
+          value={search}
+          containerStyle={{ width: '100%', marginBottom: 16 }}
+          onEndEditing={async () => await getMyOrders()}
+          round
+        />
+      )}
 
       <FlatList
         key={orders.id_pedido}
