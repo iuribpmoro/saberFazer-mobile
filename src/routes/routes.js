@@ -52,7 +52,9 @@ export default function Routes() {
         <Drawer.Navigator drawerContent={props => <LogoutDrawerContent {...props} />}>
             <Drawer.Screen name="Produtos" component={ProductsStackScreen} />
             <Drawer.Screen name="Pedidos" component={OrdersStackScreen} />
-            <Drawer.Screen name="Login" component={Login} />
+            {!signed &&
+                <Drawer.Screen name="Login" component={Login} />
+            }
         </Drawer.Navigator>
     );
 }
