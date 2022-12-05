@@ -1,8 +1,10 @@
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, View, TouchableOpacity } from 'react-native';
 import { Input, Button, Text, Image } from '@rneui/themed';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import * as ImagePicker from 'expo-image-picker';
+import { createProduct } from '../../hooks/product-hooks';
+import { Dialog } from '@rneui/themed';
 
 export default function AddProduct() {
   const [name, setName] = useState('');
@@ -10,17 +12,28 @@ export default function AddProduct() {
   const [stock, setStock] = useState('');
   const [image, setImage] = useState(null);
   const [imageUri, setImageUri] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleAddProduct = () => {
+  const handleAddProduct = async () => {
     const newProduct = {
       nome: name,
       valor: Number(price),
       qtd_estoque: Number(stock),
-      img: image,
+      img: image || '',
       ativo: true,
     };
 
     console.log(newProduct);
+
+    setLoading(true);
+    try {
+      await createProduct(newProduct);
+      alert('Produto cadastrado com sucesso!');
+    } catch (error) {
+      console.log(error.response.data);
+    }
+
+    setLoading(false);
   };
 
   const pickImage = async () => {
@@ -45,8 +58,13 @@ export default function AddProduct() {
     }
   };
 
+  useEffect(() => {
+    setLoading(false);
+  }, []);
+
   return (
     <View style={{ alignItems: 'center', paddingTop: 16 }}>
+      {loading && <Dialog.Loading visible={loading} loadingProps={{ size: 'large' }} />}
       <Text h4 style={{ marginBottom: 16 }}>Adicionar Produto</Text>
 
       <Input

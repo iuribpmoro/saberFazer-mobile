@@ -6,28 +6,30 @@ import { Text, ListItem, Switch } from '@rneui/themed';
 import { Button } from '@rneui/base';
 import { useNavigation } from '@react-navigation/native';
 import AuthContext from '../../contexts/auth';
+import { getProducts, updateProduct } from '../../hooks/product-hooks';
 
 export default function Products() {
   const [products, setProducts] = useState([]);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const newProduct = {
-    id_produto: 1,
-    nome: 'Produto 1',
-    valor: 10.00,
-    qtd_estoque: 10,
-    img: 'https://picsum.photos/200/300',
-    ativo: true,
-  }
+  // const newProduct = {
+  //   id_produto: 1,
+  //   nome: 'Produto 1',
+  //   valor: 10.00,
+  //   qtd_estoque: 10,
+  //   img: 'https://picsum.photos/200/300',
+  //   ativo: true,
+  // }
 
   const { signed } = useContext(AuthContext);
   const navigation = useNavigation();
 
-  const disableProduct = (id) => {
+  const disableProduct = async (id) => {
     const newProducts = products.map((product) => {
       if (product.id_produto === id) {
         return {
           ...product,
-          ativo: !product.ativo,
+          ativo: product.ativo === 1 ? 0 : 1,
         };
       }
 
@@ -35,29 +37,29 @@ export default function Products() {
     });
 
     setProducts(newProducts);
+
+    const product = products.find((product) => product.id_produto === id);
+    const disabledProduct = {
+      ...product,
+      ativo: product.ativo === 1 ? 0 : 1,
+    };
+
+    await updateProduct(disabledProduct);
+
   };
 
   useEffect(() => {
 
-    setProducts([
-      {
-        id_produto: 1,
-        nome: 'Produto 1',
-        valor: 10.00,
-        qtd_estoque: 10,
-        img: 'https://picsum.photos/200/300',
-        ativo: true,
-      },
-      {
-        id_produto: 2,
-        nome: 'Produto 2',
-        valor: 20.00,
-        qtd_estoque: 5,
-        img: 'https://picsum.photos/200/400',
-        ativo: true,
-      }
-    ]);
-  }, []);
+    const fetchProducts = async () => {
+      const response = await getProducts();
+
+      setProducts(response);
+    }
+
+    fetchProducts();
+    setRefreshing(false);
+
+  }, [refreshing]);
 
   return (
     <View style={{ alignItems: 'center', paddingTop: 16 }}>
@@ -66,16 +68,18 @@ export default function Products() {
         key={products.id_produto}
         data={products}
         style={{ width: '100%' }}
+        onRefresh={() => setRefreshing(true)}
+        refreshing={refreshing}
         renderItem={({ item }) => (
           <ListItem bottomDivider style={{ marginBottom: 8 }}>
             <ListItem.Content>
               <ListItem.Title>{item.nome}</ListItem.Title>
-              <ListItem.Subtitle>R$ {item.valor.toFixed(2)}</ListItem.Subtitle>
+              <ListItem.Subtitle>R$ {Number(item.valor).toFixed(2)}</ListItem.Subtitle>
             </ListItem.Content>
             {signed && (
               <Switch
-                value={item.ativo}
-                onValueChange={() => disableProduct(item.id_produto)}
+                value={item.ativo === 1}
+                onValueChange={async () => await disableProduct(item.id_produto)}
               />
             )}
           </ListItem>
