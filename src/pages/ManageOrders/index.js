@@ -6,11 +6,13 @@ import { StyleSheet, Text, View } from 'react-native';
 import { FlatList } from 'react-native-gesture-handler';
 import { Icon, Button } from '@rneui/themed';
 import AuthContext from '../../contexts/auth';
+import { getOrders } from '../../hooks/order-hooks';
 
 export default function ManageOrders() {
   const [orders, setOrders] = useState([])
   const navigation = useNavigation();
   const { signed, user } = useContext(AuthContext);
+  const [refreshing, setRefreshing] = useState(false);
 
   const changeOrderStatus = (id, status) => {
     const newOrders = orders.map((order) => {
@@ -30,35 +32,32 @@ export default function ManageOrders() {
     console.log(newOrders);
   };
 
-  useEffect(() => {
+  const getStatus = (status) => {
+    switch (status) {
+      case 0:
+        return 'Aguardando confirmação';
+      case 1:
+        return 'Confirmado';
+      case 2:
+        return 'Finalizado';
+      case 3:
+        return 'Cancelado';
+      default:
+        return 'Aguardando confirmação';
+    }
+  };
 
-    setOrders([
-      {
-        id_pedido: 1,
-        data_hora: "10/10/2022",
-        nome_pessoa: 'João da Silva',
-        cpf_pessoa: '123.456.789-00',
-        forma_pag: 'Dinheiro',
-        endereco: 'Rua das Flores, 123',
-        confirmado: true,
-        status: 'confirmado',
-        obs: '',
-        valor: 50.00,
-      },
-      {
-        id_pedido: 2,
-        data_hora: "11/10/2022",
-        nome_pessoa: 'Maria da Silva',
-        cpf_pessoa: '123.456.789-00',
-        forma_pag: 'Cartão',
-        endereco: 'Rua das Flores, 123',
-        confirmado: false,
-        status: 'pendente',
-        obs: '',
-        valor: 20.00,
-      },
-    ]);
-  }, []);
+  useEffect(() => {
+    const fetchOrders = async () => {
+      const response = await getOrders();
+      console.log(response);
+
+      setOrders(response);
+    }
+
+    fetchOrders();
+    setRefreshing(false);
+  }, [refreshing]);
 
   return (
     <View style={{ alignItems: 'center', paddingTop: 16 }}>
@@ -67,6 +66,13 @@ export default function ManageOrders() {
         key={item => item.id_pedido}
         data={orders}
         style={{ width: '100%' }}
+        refreshing={refreshing}
+        onRefresh={() => setRefreshing(true)}
+        ListEmptyComponent={() => (
+          <View style={{ alignItems: 'center', paddingTop: 16, paddingBottom: 16 }}>
+            <Text style={{ fontSize: 16, color: '#999' }}>Nenhum pedido encontrado</Text>
+          </View>
+        )}
         renderItem={({ item }) => (
           <ListItem bottomDivider style={{ marginBottom: 8 }}>
             <ListItem.Content>
@@ -75,8 +81,8 @@ export default function ManageOrders() {
 
               <ListItem.Subtitle>Endereço: {item.endereco}</ListItem.Subtitle>
               <ListItem.Subtitle>Pagamento: {item.forma_pag}</ListItem.Subtitle>
-              <ListItem.Subtitle>Valor: R$ {item.valor.toFixed(2)}</ListItem.Subtitle>
-              <ListItem.Subtitle>Status: {item.status.charAt(0).toUpperCase() + item.status.slice(1)}</ListItem.Subtitle>
+              <ListItem.Subtitle>Valor: R$ {Number(item.valor).toFixed(2)}</ListItem.Subtitle>
+              <ListItem.Subtitle>Status: {getStatus(item.confirmado)}</ListItem.Subtitle>
 
             </ListItem.Content>
 

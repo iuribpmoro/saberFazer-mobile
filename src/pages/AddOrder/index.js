@@ -2,6 +2,9 @@ import { ScrollView } from 'react-native';
 import { useEffect, useState } from 'react';
 import { Picker } from '@react-native-picker/picker';
 import { Input, Button, Text } from '@rneui/themed';
+import { getProducts } from '../../hooks/product-hooks';
+import { createOrder } from '../../hooks/order-hooks';
+import { useNavigation } from '@react-navigation/native';
 
 export default function AddOrder() {
   const [nomePessoa, setNomePessoa] = useState('');
@@ -14,27 +17,54 @@ export default function AddOrder() {
 
   const [products, setProducts] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(0);
-  const [selectedFormaPag, setSelectedFormaPag] = useState("");
+  const [selectedFormaPag, setSelectedFormaPag] = useState("Dinheiro");
+
+  const [refreshing, setRefreshing] = useState(false);
 
   const formasPag = ["Dinheiro", "Débito", "Crédito", "Pix"];
 
-  const handleAddOrder = () => {
-    const data_hora = new Date();
+  const navigation = useNavigation();
+
+  const handleAddOrder = async () => {
+    const data_hora = new Date().toISOString().slice(0, 19).replace('T', ' ');
 
     const newOrder = {
       data_hora,
       nome_pessoa: nomePessoa,
       cpf_pessoa: cpfPessoa,
-      forma_pag: formaPag,
+      forma_pag: selectedFormaPag,
       endereco: endereco,
-      confirmado: false,
-      status: 'pendente',
-      valor,
-      produto: selectedProduct,
-      quantidade: 1
+      confirmado: 0,
+      obs: '',
+      valor
     };
 
     console.log(newOrder);
+    try {
+      const orderResponse = await createOrder(newOrder);
+
+      const newOrderId = orderResponse.id_pedido;
+      console.log(newOrderId);
+
+      const newOrderProduct = {
+        id_pedido: newOrderId,
+        id_produto: selectedProduct,
+        quantidade,
+        status: 0
+      };
+
+      console.log(newOrderProduct);
+
+      navigation.navigate('OrdersStack');
+    } catch (error) {
+      console.log(error);
+    }
+
+    // const newOrderItem = {
+    //   id_produto: selectedProduct,
+    //   id
+    // }
+
   };
 
   const handleCEP = async () => {
@@ -49,35 +79,30 @@ export default function AddOrder() {
   }
 
   useEffect(() => {
+    const fetchProducts = async () => {
+      const response = await getProducts();
 
-    setProducts([
-      {
-        id_produto: 1,
-        nome: 'Produto 1',
-        valor: 10.00,
-        qtd_estoque: 10,
-        img: 'https://picsum.photos/200/300',
-        ativo: true,
-      },
-      {
-        id_produto: 2,
-        nome: 'Produto 2',
-        valor: 20.00,
-        qtd_estoque: 5,
-        img: 'https://picsum.photos/200/400',
-        ativo: true,
-      }
-    ]);
-  }, []);
+      const activeProducts = response.filter((product) => product.ativo === 1);
+
+      setProducts(activeProducts);
+    }
+
+    console.log(new Date().toISOString().slice(0, 19).replace('T', ' '))
+
+    fetchProducts();
+    setRefreshing(false);
+  }, [refreshing]);
 
   const handleChangeProduct = (id) => {
     setSelectedProduct(id);
-    setValor(products.find((product) => product.id_produto === id).valor);
+    setValor(Number(products.find((product) => product.id_produto === id).valor) * quantidade);
+
   };
 
   const handleChangeQuantity = (quantity) => {
     setQuantidade(quantity);
-    setValor(products.find((product) => product.id_produto === selectedProduct).valor * quantity);
+    setValor(Number(products.find((product) => product.id_produto === selectedProduct).valor) * quantity);
+    console.log(quantity, valor);
   };
 
 
@@ -110,7 +135,10 @@ export default function AddOrder() {
         label="Endereço"
         value={endereco}
         onChangeText={setEndereco}
-        style={{ width: "100%", marginTop: 16 }}
+        textContentType="fullStreetAddress"
+        numberOfLines={4}
+        multiline={true}
+        style={{ width: "100%", marginTop: 16, alignItems: 'flex-start', textAlignVertical: 'top' }}
       />
 
       <Text
@@ -137,7 +165,7 @@ export default function AddOrder() {
       <Input
         label="Quantidade"
         value={quantidade}
-        onChangeText={() => handleChangeQuantity(quantidade)}
+        onChangeText={handleChangeQuantity}
         style={{ width: "100%", marginTop: 16 }}
       />
 
@@ -172,7 +200,7 @@ export default function AddOrder() {
 
       <Button
         title="Adicionar Pedido"
-        onPress={handleAddOrder}
+        onPress={async () => await handleAddOrder()}
         containerStyle={{ width: "80%", marginTop: 32 }}
       />
     </ScrollView>
