@@ -120,7 +120,7 @@ export default function AddOrder() {
         if (item.product.id_produto === id) {
           return {
             product: item.product,
-            quantity: newQuantity,
+            quantity: newQuantity > product.qtd_estoque ? product.qtd_estoque : newQuantity,
           };
         } else {
           return item;
@@ -136,7 +136,7 @@ export default function AddOrder() {
         ...cart,
         {
           product,
-          quantity: 1
+          quantity: product.qtd_estoque < 1 ? 0 : 1,
         }
       ]);
     }
