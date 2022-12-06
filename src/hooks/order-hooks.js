@@ -15,6 +15,11 @@ const createOrderProducts = async (orderProducts) => {
     return response.data;
 }
 
+const getOrdersProducts = async () => {
+    const response = await api.get("/pedidoProdutos");
+    return response.data;
+}
+
 
 const updateOrder = async (order) => {
     const response = await api.put(`/pedido/${order.id_pedido}`, order);
@@ -26,4 +31,4 @@ const deleteOrder = async (id) => {
     return response.data;
 }
 
-export { getOrders, createOrder, updateOrder, deleteOrder, createOrderProducts };
+export { getOrders, createOrder, updateOrder, deleteOrder, createOrderProducts, getOrdersProducts };
