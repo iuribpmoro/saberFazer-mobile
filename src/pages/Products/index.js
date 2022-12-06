@@ -2,7 +2,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useContext, useEffect, useState } from 'react';
 import { FlatList, View } from 'react-native';
 import { getAuthenticationState } from '../../services/authentication';
-import { Text, ListItem, Switch, Icon } from '@rneui/themed';
+import { Text, ListItem, Switch, Icon, Image } from '@rneui/themed';
 import { Button, FAB } from '@rneui/base';
 import { useNavigation } from '@react-navigation/native';
 import AuthContext from '../../contexts/auth';
@@ -90,51 +90,56 @@ export default function Products() {
 
   return (
     <>
-      <ScrollView contentContainerStyle={{ alignItems: 'center', paddingTop: 16 }}>
-
-        <FlatList
-          key={products.id_produto}
-          data={products}
-          style={{ width: '100%' }}
-          onRefresh={() => setRefreshing(true)}
-          refreshing={refreshing}
-          renderItem={({ item }) => (
-            <ListItem bottomDivider style={{ marginBottom: 8 }}>
-              <ListItem.Content style={styles.productCard}>
-                <ListItem.Title style={styles.productName}>{item.nome}</ListItem.Title>
-                <ListItem.Subtitle style={styles.price}>Preço: R$ {item.valor}</ListItem.Subtitle>
-                {signed && (
-                  <View style={styles.quantity}>
-                    <Button onPress={async () => await changeQuantity(item.id_produto, item.qtd_estoque - 1)} title="-" containerStyle={styles.buttonContainer} buttonStyle={styles.button} />
-                    <Text>{item.qtd_estoque}</Text>
-                    <Button onPress={async () => await changeQuantity(item.id_produto, item.qtd_estoque + 1)} title="+" containerStyle={styles.buttonContainer} buttonStyle={styles.button} />
-                  </View>
-                )}
-                {!signed && (
-                  <ListItem.Subtitle style={styles.price}>Estoque: {item.qtd_estoque}</ListItem.Subtitle>
-                )}
-              </ListItem.Content>
-              {signed && updated.includes(item.id_produto) && (
-                <Button
-                  onPress={() => saveProductUpdate(item.id_produto)}
-                  containerStyle={{ borderRadius: 8 }}
-                  buttonStyle={{ marginLeft: 8, backgroundColor: "#457147" }}
-                >
-                  <Icon name="save" color={"white"} />
-                </Button>
-              )}
+      <FlatList
+        key={products.id_produto}
+        data={products}
+        style={{ width: '100%' }}
+        onRefresh={() => setRefreshing(true)}
+        refreshing={refreshing}
+        renderItem={({ item }) => (
+          <ListItem bottomDivider style={{ marginBottom: 8 }}>
+            {/* display image in left */}
+            {item.img && (
+              <Image
+                key={`${item.id_produto}-img`}
+                source={{ uri: item.img.startsWith("data:image/jpeg;base64,") ? item.img : `data:image/jpeg;base64,${item.img}` }}
+                style={{ width: 50, height: 50, borderRadius: 8 }}
+              />
+            )}
+            <ListItem.Content style={styles.productCard}>
+              <ListItem.Title style={styles.productName}>{item.nome}</ListItem.Title>
+              <ListItem.Subtitle style={styles.price}>Preço: R$ {item.valor}</ListItem.Subtitle>
               {signed && (
-                <Switch
-                  value={item.ativo === 1}
-                  onValueChange={async () => await disableProduct(item.id_produto)}
-                  color="#457147"
-                />
+                <View style={styles.quantity}>
+                  <Button onPress={async () => await changeQuantity(item.id_produto, item.qtd_estoque - 1)} title="-" containerStyle={styles.buttonContainer} buttonStyle={styles.button} />
+                  <Text>{item.qtd_estoque}</Text>
+                  <Button onPress={async () => await changeQuantity(item.id_produto, item.qtd_estoque + 1)} title="+" containerStyle={styles.buttonContainer} buttonStyle={styles.button} />
+                </View>
               )}
-            </ListItem>
-          )}
-        />
+              {!signed && (
+                <ListItem.Subtitle style={styles.price}>Estoque: {item.qtd_estoque}</ListItem.Subtitle>
+              )}
+            </ListItem.Content>
+            {signed && updated.includes(item.id_produto) && (
+              <Button
+                onPress={() => saveProductUpdate(item.id_produto)}
+                containerStyle={{ borderRadius: 8 }}
+                buttonStyle={{ marginLeft: 8, backgroundColor: "#457147" }}
+              >
+                <Icon name="save" color={"white"} />
+              </Button>
+            )}
+            {signed && (
+              <Switch
+                value={item.ativo === 1}
+                onValueChange={async () => await disableProduct(item.id_produto)}
+                color="#457147"
+              />
+            )}
+          </ListItem>
+        )}
+      />
 
-      </ScrollView>
       {signed && (
         <FAB
           onPress={() => navigation.navigate('AddProductsStack')}
