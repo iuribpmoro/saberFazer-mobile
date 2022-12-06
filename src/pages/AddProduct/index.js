@@ -3,7 +3,7 @@ import { StyleSheet, View, TouchableOpacity } from 'react-native';
 import { Input, Button, Text, Image, Icon } from '@rneui/themed';
 import { useEffect, useState } from 'react';
 import * as ImagePicker from 'expo-image-picker';
-import { createProduct } from '../../hooks/product-hooks';
+import { createProduct, getProducts } from '../../hooks/product-hooks';
 import { Dialog } from '@rneui/themed';
 import { ScrollView } from 'react-native-gesture-handler';
 import { useNavigation } from '@react-navigation/native';
@@ -18,6 +18,12 @@ export default function AddProduct() {
   const navigation = useNavigation();
 
   const handleAddProduct = async () => {
+    const products = await getProducts();
+    if (products.find((product) => product.nome === name)) {
+      alert('Produto já cadastrado');
+      return;
+    }
+
     const newProduct = {
       nome: name,
       valor: Number(price),
