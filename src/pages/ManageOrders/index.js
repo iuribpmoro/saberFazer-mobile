@@ -36,7 +36,6 @@ export default function ManageOrders() {
     });
 
     setOrders(newOrders);
-    console.log(newOrders);
 
     const order = orders.find((order) => order.id_pedido === isCancelOrderDialogOpen);
     const changedOrder = {
@@ -45,8 +44,6 @@ export default function ManageOrders() {
       obs: cancelOrderObservation || '',
       data_hora: order.data_hora.slice(0, 19).replace('T', ' ')
     };
-
-    console.log(changedOrder);
 
     await updateOrder(changedOrder);
 
@@ -138,7 +135,6 @@ export default function ManageOrders() {
   }, [refreshing]);
 
   const getOrderProducts = (id) => {
-    console.log(id);
     const orderProductsList = orderProducts.filter((orderProduct) => orderProduct.id_pedido === id);
     // console.log(orderProductsList);
 
@@ -154,9 +150,10 @@ export default function ManageOrders() {
       };
     });
 
-    console.log(productsList);
+    // check if quantity bigger than 0
+    const filteredProductsList = productsList.filter((product) => product.quantity > 0);
 
-    return productsList;
+    return filteredProductsList;
   };
 
   return (
