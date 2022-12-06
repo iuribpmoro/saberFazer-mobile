@@ -3,10 +3,11 @@ import { useContext, useEffect, useState } from 'react';
 import { FlatList, View } from 'react-native';
 import { getAuthenticationState } from '../../services/authentication';
 import { Text, ListItem, Switch } from '@rneui/themed';
-import { Button } from '@rneui/base';
+import { Button, FAB } from '@rneui/base';
 import { useNavigation } from '@react-navigation/native';
 import AuthContext from '../../contexts/auth';
 import { getProducts, updateProduct } from '../../hooks/product-hooks';
+import { ScrollView } from 'react-native-gesture-handler';
 
 export default function Products() {
   const [products, setProducts] = useState([]);
@@ -62,36 +63,41 @@ export default function Products() {
   }, [refreshing]);
 
   return (
-    <View style={{ alignItems: 'center', paddingTop: 16 }}>
+    <>
+      <ScrollView contentContainerStyle={{ alignItems: 'center', paddingTop: 16 }}>
 
-      <FlatList
-        key={products.id_produto}
-        data={products}
-        style={{ width: '100%' }}
-        onRefresh={() => setRefreshing(true)}
-        refreshing={refreshing}
-        renderItem={({ item }) => (
-          <ListItem bottomDivider style={{ marginBottom: 8 }}>
-            <ListItem.Content>
-              <ListItem.Title>{item.nome}</ListItem.Title>
-              <ListItem.Subtitle>R$ {Number(item.valor).toFixed(2)}</ListItem.Subtitle>
-            </ListItem.Content>
-            {signed && (
-              <Switch
-                value={item.ativo === 1}
-                onValueChange={async () => await disableProduct(item.id_produto)}
-              />
-            )}
-          </ListItem>
-        )}
-      />
+        <FlatList
+          key={products.id_produto}
+          data={products}
+          style={{ width: '100%' }}
+          onRefresh={() => setRefreshing(true)}
+          refreshing={refreshing}
+          renderItem={({ item }) => (
+            <ListItem bottomDivider style={{ marginBottom: 8 }}>
+              <ListItem.Content>
+                <ListItem.Title>{item.nome}</ListItem.Title>
+                <ListItem.Subtitle>R$ {Number(item.valor).toFixed(2)}</ListItem.Subtitle>
+              </ListItem.Content>
+              {signed && (
+                <Switch
+                  value={item.ativo === 1}
+                  onValueChange={async () => await disableProduct(item.id_produto)}
+                  color="#457147"
+                />
+              )}
+            </ListItem>
+          )}
+        />
 
+      </ScrollView>
       {signed && (
-        <Button
-          title="Adicionar"
+        <FAB
           onPress={() => navigation.navigate('AddProductsStack')}
+          icon={{ name: 'add', color: '#fff' }}
+          color="#457147"
+          placement='right'
         />
       )}
-    </View>
+    </>
   );
 }

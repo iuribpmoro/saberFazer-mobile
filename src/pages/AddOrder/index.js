@@ -87,8 +87,6 @@ export default function AddOrder() {
       setProducts(activeProducts);
     }
 
-    console.log(new Date().toISOString().slice(0, 19).replace('T', ' '))
-
     fetchProducts();
     setRefreshing(false);
   }, [refreshing]);
@@ -102,7 +100,6 @@ export default function AddOrder() {
   const handleChangeQuantity = (quantity) => {
     setQuantidade(quantity);
     setValor(Number(products.find((product) => product.id_produto === selectedProduct).valor) * quantity);
-    console.log(quantity, valor);
   };
 
 
@@ -114,6 +111,7 @@ export default function AddOrder() {
         value={nomePessoa}
         onChangeText={setNomePessoa}
         style={{ width: "100%", marginTop: 16 }}
+        labelStyle={{ color: '#457147' }}
       />
 
       <Input
@@ -121,6 +119,7 @@ export default function AddOrder() {
         value={cpfPessoa}
         onChangeText={setCpfPessoa}
         style={{ width: "100%", marginTop: 16 }}
+        labelStyle={{ color: '#457147' }}
       />
 
       <Input
@@ -129,6 +128,7 @@ export default function AddOrder() {
         onChangeText={setCep}
         onEndEditing={handleCEP}
         style={{ width: "100%", marginTop: 16 }}
+        labelStyle={{ color: '#457147' }}
       />
 
       <Input
@@ -139,10 +139,11 @@ export default function AddOrder() {
         numberOfLines={4}
         multiline={true}
         style={{ width: "100%", marginTop: 16, alignItems: 'flex-start', textAlignVertical: 'top' }}
+        labelStyle={{ color: '#457147' }}
       />
 
       <Text
-        style={{ marginTop: 16, alignSelf: "flex-start", marginLeft: 8, fontSize: 16, fontWeight: 'bold', marginBottom: 8, color: "grey" }}>
+        style={{ marginTop: 16, alignSelf: "flex-start", marginLeft: 8, fontSize: 16, fontWeight: 'bold', marginBottom: 8, color: "#457147" }}>
         Produto
       </Text>
 
@@ -167,10 +168,11 @@ export default function AddOrder() {
         value={quantidade}
         onChangeText={handleChangeQuantity}
         style={{ width: "100%", marginTop: 16 }}
+        labelStyle={{ color: '#457147' }}
       />
 
       <Text
-        style={{ marginTop: 16, alignSelf: "flex-start", marginLeft: 8, fontSize: 16, fontWeight: 'bold', marginBottom: 8, color: "grey" }}>
+        style={{ marginTop: 16, alignSelf: "flex-start", marginLeft: 8, fontSize: 16, fontWeight: 'bold', marginBottom: 8, color: '#457147' }}>
         Forma de Pagamento
       </Text>
       <Picker
@@ -190,18 +192,19 @@ export default function AddOrder() {
       </Picker>
 
       <Text
-        style={{ marginTop: 16, alignSelf: "flex-start", marginLeft: 8, fontSize: 16, fontWeight: 'bold', marginBottom: 8, color: "grey" }}>
+        style={{ marginTop: 16, alignSelf: "flex-start", marginLeft: 8, fontSize: 16, fontWeight: 'bold', marginBottom: 8, color: '#457147' }}>
         Valor Total:
       </Text>
       <Text
-        style={{ marginTop: 16, alignSelf: "flex-start", marginLeft: 8, fontSize: 16, marginBottom: 8, color: "grey" }}>
+        style={{ marginTop: 16, alignSelf: "flex-start", marginLeft: 8, fontSize: 16, marginBottom: 8, color: 'black' }}>
         R$ {Number(valor).toFixed(2)}
       </Text>
 
       <Button
         title="Adicionar Pedido"
         onPress={async () => await handleAddOrder()}
-        containerStyle={{ width: "80%", marginTop: 32 }}
+        containerStyle={{ width: '80%', marginTop: 32, borderRadius: 8 }}
+        buttonStyle={{ backgroundColor: "#457147" }}
       />
     </ScrollView>
   );

@@ -43,6 +43,7 @@ export default function Login() {
             autoCorrect={false}
             value={email}
             onChangeText={(value) => setEmail(value)}
+            labelStyle={{ color: '#457147' }}
           />
           <Input
             label="Senha"
@@ -52,10 +53,13 @@ export default function Login() {
             value={password}
             textContentType="password"
             onChangeText={(value) => setPassword(value)}
+            labelStyle={{ color: '#457147' }}
           />
           <Button
             title="Entrar"
             onPress={handleSignIn}
+            containerStyle={{ width: '80%', marginTop: 32, borderRadius: 8 }}
+            buttonStyle={{ backgroundColor: "#457147" }}
           />
         </>
       )}

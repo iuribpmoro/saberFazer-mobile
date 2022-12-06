@@ -1,10 +1,11 @@
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, View, TouchableOpacity } from 'react-native';
-import { Input, Button, Text, Image } from '@rneui/themed';
+import { Input, Button, Text, Image, Icon } from '@rneui/themed';
 import { useEffect, useState } from 'react';
 import * as ImagePicker from 'expo-image-picker';
 import { createProduct } from '../../hooks/product-hooks';
 import { Dialog } from '@rneui/themed';
+import { ScrollView } from 'react-native-gesture-handler';
 
 export default function AddProduct() {
   const [name, setName] = useState('');
@@ -63,34 +64,44 @@ export default function AddProduct() {
   }, []);
 
   return (
-    <View style={{ alignItems: 'center', paddingTop: 16 }}>
+    <ScrollView contentContainerStyle={{ alignItems: 'center', paddingTop: 24, paddingBottom: 24 }}>
       {loading && <Dialog.Loading visible={loading} loadingProps={{ size: 'large' }} />}
-      <Text h4 style={{ marginBottom: 16 }}>Adicionar Produto</Text>
+      <Text h4 style={{ marginBottom: 32, color: "#457147" }}>Adicionar Produto</Text>
 
       <Input
         label="Nome"
         value={name}
         onChangeText={(value) => setName(value)}
+        labelStyle={{ color: '#457147' }}
       />
       <Input
         label="Preço"
         keyboardType="numeric"
         value={price}
         onChangeText={(value) => setPrice(value)}
+        labelStyle={{ color: '#457147' }}
       />
       <Input
         label="Estoque"
         value={stock}
         keyboardType="numeric"
         onChangeText={(value) => setStock(value)}
+        labelStyle={{ color: '#457147' }}
       />
       {image && <Image source={{ uri: imageUri }} style={{ width: 200, height: 200, marginTop: 16, marginBottom: 16 }} />}
-      <Button title="Pick an image from camera roll" onPress={pickImage} />
+      <Button
+        title="Tirar uma foto do produto"
+        icon={<Icon name="camera-alt" size={24} color="#fff" style={{ marginRight: 8 }} />}
+        onPress={pickImage}
+        containerStyle={{ width: '80%', marginTop: 16, borderRadius: 8 }}
+        buttonStyle={{ backgroundColor: "#457147" }}
+      />
       <Button
         title="Adicionar"
         onPress={handleAddProduct}
-        buttonStyle={{ marginTop: 16 }}
+        containerStyle={{ width: '80%', marginTop: 32, borderRadius: 8 }}
+        buttonStyle={{ backgroundColor: "#457147" }}
       />
-    </View>
+    </ScrollView>
   );
 }
