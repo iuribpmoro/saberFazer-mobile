@@ -2,7 +2,7 @@ import { ScrollView, View } from 'react-native';
 import { useEffect, useState } from 'react';
 import { Picker } from '@react-native-picker/picker';
 import { Input, Button, Text, Dialog, ListItem, Icon } from '@rneui/themed';
-import { getProducts } from '../../hooks/product-hooks';
+import { getProducts, updateProduct } from '../../hooks/product-hooks';
 import { createOrder, createOrderProducts } from '../../hooks/order-hooks';
 import { useNavigation } from '@react-navigation/native';
 import { TouchableOpacity } from 'react-native-gesture-handler';
@@ -51,6 +51,9 @@ export default function AddOrder() {
       console.log(newOrderId);
 
       for (const item of cart) {
+        const newQuantity = item.product.qtd_estoque - item.quantity;
+        console.log("newQuantity: " + newQuantity);
+
         const newOrderProduct = {
           id_pedido: newOrderId,
           id_produto: item.product.id_produto,
@@ -58,14 +61,25 @@ export default function AddOrder() {
           status: 0
         };
 
-        console.log(newOrderProduct);
+        // console.log(newOrderProduct);
 
         await createOrderProducts(newOrderProduct);
+
+
+        const product = products.find((product) => product.id_produto === item.product.id_produto);
+        const changedProduct = {
+          ...product,
+          qtd_estoque: newQuantity,
+        };
+
+        console.log(changedProduct);
+
+        await updateProduct(changedProduct);
       }
 
       navigation.navigate('OrdersStack');
     } catch (error) {
-      console.log(error.response);
+      console.log(error.response.data);
     }
 
   };
@@ -126,8 +140,6 @@ export default function AddOrder() {
           return item;
         }
       });
-
-      console.log(updatedCart);
 
       setCart(updatedCart);
     } else {
@@ -265,7 +277,7 @@ export default function AddOrder() {
         onBackdropPress={() => setIsProductListVisible(false)}
       >
         {products.map((product) => (
-          <ListItem bottomDivider style={{ marginBottom: 8 }}>
+          <ListItem bottomDivider style={{ marginBottom: 8 }} key={product.id_produto}>
             <ListItem.Content
               style={{ flexDirection: 'row', justifyContent: 'space-between' }}
             >
