@@ -1,19 +1,21 @@
-import { ScrollView } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import { useEffect, useState } from 'react';
 import { Picker } from '@react-native-picker/picker';
-import { Input, Button, Text } from '@rneui/themed';
+import { Input, Button, Text, Dialog, ListItem, Icon } from '@rneui/themed';
 import { getProducts } from '../../hooks/product-hooks';
-import { createOrder } from '../../hooks/order-hooks';
+import { createOrder, createOrderProducts } from '../../hooks/order-hooks';
 import { useNavigation } from '@react-navigation/native';
+import { TouchableOpacity } from 'react-native-gesture-handler';
+
 
 export default function AddOrder() {
   const [nomePessoa, setNomePessoa] = useState('');
   const [cpfPessoa, setCpfPessoa] = useState('');
-  const [formaPag, setFormaPag] = useState('');
   const [cep, setCep] = useState('');
   const [endereco, setEndereco] = useState('');
   const [valor, setValor] = useState('');
   const [quantidade, setQuantidade] = useState(1);
+  const [cart, setCart] = useState([]);
 
   const [products, setProducts] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(0);
@@ -22,6 +24,8 @@ export default function AddOrder() {
   const [refreshing, setRefreshing] = useState(false);
 
   const formasPag = ["Dinheiro", "Débito", "Crédito", "Pix"];
+
+  const [isProductListVisible, setIsProductListVisible] = useState(false);
 
   const navigation = useNavigation();
 
@@ -46,24 +50,23 @@ export default function AddOrder() {
       const newOrderId = orderResponse.id_pedido;
       console.log(newOrderId);
 
-      const newOrderProduct = {
-        id_pedido: newOrderId,
-        id_produto: selectedProduct,
-        quantidade,
-        status: 0
-      };
+      for (const item of cart) {
+        const newOrderProduct = {
+          id_pedido: newOrderId,
+          id_produto: item.product.id_produto,
+          quantidade: item.quantity,
+          status: 0
+        };
 
-      console.log(newOrderProduct);
+        console.log(newOrderProduct);
+
+        await createOrderProducts(newOrderProduct);
+      }
 
       navigation.navigate('OrdersStack');
     } catch (error) {
-      console.log(error);
+      console.log(error.response);
     }
-
-    // const newOrderItem = {
-    //   id_produto: selectedProduct,
-    //   id
-    // }
 
   };
 
@@ -102,6 +105,92 @@ export default function AddOrder() {
     setValor(Number(products.find((product) => product.id_produto === selectedProduct).valor) * quantity);
   };
 
+  const handleAddToCart = (id) => {
+    // setCart([])
+    const product = products.find((product) => product.id_produto === id);
+
+    // Check if the product is already in the cart
+    const productInCart = cart.find((item) => item.product.id_produto === id);
+
+    if (productInCart) {
+      // If the product is already in the cart, update the quantity
+      const updatedCart = cart.map((item) => {
+        const newQuantity = item.quantity + 1;
+
+        if (item.product.id_produto === id) {
+          return {
+            product: item.product,
+            quantity: newQuantity,
+          };
+        } else {
+          return item;
+        }
+      });
+
+      console.log(updatedCart);
+
+      setCart(updatedCart);
+    } else {
+      // If the product is not in the cart, add it to the cart
+      setCart([
+        ...cart,
+        {
+          product,
+          quantity: 1
+        }
+      ]);
+    }
+
+    const newTotal = calculateTotal();
+    setValor(newTotal);
+  };
+
+  const handleRemoveFromCart = (id) => {
+    const productInCart = cart.find((item) => item.product.id_produto === id);
+
+    if (productInCart) {
+      const updatedCart = cart.map((item) => {
+
+        const newQuantity = item.quantity - 1;
+
+        // if the new quantity is 0, remove the product from the cart
+        if (item.product.id_produto === id) {
+          return {
+            product: item.product,
+            quantity: newQuantity < 0 ? 0 : newQuantity,
+          };
+        } else {
+          return item;
+        }
+      });
+
+      console.log(updatedCart);
+      setCart(updatedCart);
+    } else {
+      setCart(cart.filter((item) => item.product.id_produto !== id));
+    }
+
+    const newTotal = calculateTotal();
+    setValor(newTotal);
+  };
+
+  const getProductCartQuantity = (id) => {
+    const product = cart.find((item) => item.product?.id_produto === id);
+
+    if (product) {
+      return product.quantity;
+    } else {
+      return 0;
+    }
+  };
+
+  const calculateTotal = () => {
+    const total = cart.reduce((acc, item) => {
+      return acc + (item.product.valor * item.quantity);
+    }, 0);
+
+    return total;
+  };
 
   return (
     <ScrollView contentContainerStyle={{ alignItems: 'center', paddingTop: 16, flexGrow: 1, paddingBottom: 32 }}>
@@ -144,10 +233,70 @@ export default function AddOrder() {
 
       <Text
         style={{ marginTop: 16, alignSelf: "flex-start", marginLeft: 8, fontSize: 16, fontWeight: 'bold', marginBottom: 8, color: "#457147" }}>
-        Produto
+        Produtos
       </Text>
+      {/* {cart.map((item) => (
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%', paddingHorizontal: 16 }}>
+          <Text style={{ fontSize: 16, color: '#457147' }}>{item.product.nome}</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <TouchableOpacity onPress={() => handleRemoveFromCart(item.product.id_produto, item.quantidade - 1)}>
+              <Icon name="minus" size={24} color="#457147" />
+            </TouchableOpacity>
+            <Text style={{ fontSize: 16, color: '#457147', marginHorizontal: 8 }}>{item.quantidade}</Text>
+            <TouchableOpacity onPress={() => handleAddToCart(item.product.id_produto, item.quantidade + 1)}>
+              <Icon name="plus" size={24} color="#457147" />
+            </TouchableOpacity>
+          </View>
+        </View>
+      ))} */}
+      <Button
+        mode="contained"
+        onPress={() => setIsProductListVisible(true)}
+        style={{ width: "100%", marginTop: 16, marginBottom: 16 }}
+        labelStyle={{ color: '#457147' }}
+        buttonStyle={{ backgroundColor: "#457147" }}
+        containerStyle={{ alignSelf: "flex-start", marginLeft: 8, marginBottom: 16, borderRadius: 8 }}
+      >
+        Adicionar Produtos
+      </Button>
 
-      <Picker
+      <Dialog
+        visible={isProductListVisible}
+        onBackdropPress={() => setIsProductListVisible(false)}
+      >
+        {products.map((product) => (
+          <ListItem bottomDivider style={{ marginBottom: 8 }}>
+            <ListItem.Content
+              style={{ flexDirection: 'row', justifyContent: 'space-between' }}
+            >
+              <View>
+                <ListItem.Title>{product.nome}</ListItem.Title>
+                <ListItem.Subtitle>R$ {product.valor}</ListItem.Subtitle>
+              </View>
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  width: 100,
+                }}
+              >
+                <Button onPress={() => handleRemoveFromCart(product.id_produto)} title="-" containerStyle={{ width: 32 }} buttonStyle={{ backgroundColor: "#457147" }} />
+                <Text>{getProductCartQuantity(product.id_produto)}</Text>
+                <Button onPress={() => handleAddToCart(product.id_produto)} title="+" containerStyle={{ width: 32 }} buttonStyle={{ backgroundColor: "#457147" }} />
+              </View>
+            </ListItem.Content>
+          </ListItem>
+        ))}
+      </Dialog>
+
+      {/* <ProductListDialog
+        visible={isProductListVisible}
+        products={products}
+        onAdd={handleAddToCart(selectedProduct, quantidade)}
+
+      /> */}
+      {/* <Picker
         selectedValue={selectedProduct}
         style={{ width: "100%", marginBottom: 16 }}
         onValueChange={(itemValue, itemIndex) => handleChangeProduct(itemValue)}
@@ -169,7 +318,7 @@ export default function AddOrder() {
         onChangeText={handleChangeQuantity}
         style={{ width: "100%", marginTop: 16 }}
         labelStyle={{ color: '#457147' }}
-      />
+      /> */}
 
       <Text
         style={{ marginTop: 16, alignSelf: "flex-start", marginLeft: 8, fontSize: 16, fontWeight: 'bold', marginBottom: 8, color: '#457147' }}>
@@ -197,7 +346,7 @@ export default function AddOrder() {
       </Text>
       <Text
         style={{ marginTop: 16, alignSelf: "flex-start", marginLeft: 8, fontSize: 16, marginBottom: 8, color: 'black' }}>
-        R$ {Number(valor).toFixed(2)}
+        R$ {calculateTotal().toFixed(2)}
       </Text>
 
       <Button
