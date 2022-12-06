@@ -6,6 +6,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { createProduct } from '../../hooks/product-hooks';
 import { Dialog } from '@rneui/themed';
 import { ScrollView } from 'react-native-gesture-handler';
+import { useNavigation } from '@react-navigation/native';
 
 export default function AddProduct() {
   const [name, setName] = useState('');
@@ -14,6 +15,7 @@ export default function AddProduct() {
   const [image, setImage] = useState(null);
   const [imageUri, setImageUri] = useState('');
   const [loading, setLoading] = useState(false);
+  const navigation = useNavigation();
 
   const handleAddProduct = async () => {
     const newProduct = {
@@ -35,6 +37,8 @@ export default function AddProduct() {
     }
 
     setLoading(false);
+
+    navigation.navigate('ProductsStack');
   };
 
   const pickImage = async () => {
